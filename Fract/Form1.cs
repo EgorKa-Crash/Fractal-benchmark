@@ -20,8 +20,7 @@ namespace Fract
             var t1 = Task.Run(() =>
             {
                 while (true)
-                {
-                    //frames.Text = "" + counter;
+                { 
                     frames.Invoke(new Action(() => frames.Text = "" + counter));
 
                     Thread.Sleep(100);
@@ -54,25 +53,24 @@ namespace Fract
             });
             Task.WaitAll(t0); 
         }
-        List<ParalellCollorMatrix> ListC;
+        //List<ParalellCollorMatrix> ListC;
 
         void ParallelCalculationWithRendering(int w, int h, DirectBitmap bitmap)
         {
             var t0 = Task.Run(() =>
             {
+                Dictionary<int, Color[]> dictionary;
                 if (!flag)
-                    ListC = ListC1;
+                    dictionary = dictionary1;
                 else
-                    ListC = ListC2;
+                    dictionary = dictionary2;
 
                 Color[] hColors;
-                if (ListC.Count >= 1)
+                if (dictionary.Count >= 1)
                 {
                     for (int x = 0; x < w; x++)
-                    {
-                        hColors = ListC.Where(t => t.id == x).Select(t => t.colorMass).First();
-
-                        //hColors = ListC[x].colorMass;
+                    {  
+                        hColors = dictionary[x];
 
                         for (int y = 0; y < h; y++)
                         {
@@ -97,9 +95,9 @@ namespace Fract
             flag = !flag;
 
             if (flag)
-                ListC1.Clear();
+                dictionary1.Clear();
             else
-                ListC2.Clear(); 
+                dictionary2.Clear(); 
         }
          
         public void OneThreadeDrawing(int w, int h, DirectBitmap bitmap)
@@ -127,17 +125,18 @@ namespace Fract
                 this.colorMass = colorMass;
             }
         }
+         
+        static Dictionary<int, Color[]> dictionary1 = new Dictionary<int, Color[]>();
+        static Dictionary<int, Color[]> dictionary2 = new Dictionary<int, Color[]>();
 
-        static List<ParalellCollorMatrix> ListC1 = new List<ParalellCollorMatrix>();
-        static List<ParalellCollorMatrix> ListC2 = new List<ParalellCollorMatrix>();
         static bool flag = true;
         private static void DoubleWriting(int h, int w, int x)
         {
-            List<ParalellCollorMatrix> ListC;
+            Dictionary<int, Color[]> dictionary;
             if (flag)
-                ListC = ListC1;
+                dictionary = dictionary1;
             else
-                ListC = ListC2;
+                dictionary = dictionary2;
 
             double cRe, cIm;
             // вещественная и мнимая части старой и новой
@@ -162,14 +161,14 @@ namespace Fract
                     newRe = oldRe * oldRe - oldIm * oldIm + cRe;
                     newIm = 2 * oldRe * oldIm + cIm;
 
-                    i++;
+                    i++; 
                 }
                 hColors[y] = FractalCalculation.Rainbow(i * 0.85F / 400F); //массив цветов вместо влоутов + 10% 
             }
 
             lock (block)
             {
-                ListC.Add(new ParalellCollorMatrix(x, true, hColors));
+                dictionary.Add(x, hColors);
             }
         } 
 
@@ -187,8 +186,7 @@ namespace Fract
          
         private void Form1_SizeChanged(object sender, EventArgs e)
         {
-            int newWidth = this.Width - 270;
-            //int newHeight = Convert.ToInt32((this.Width - 257) / 3 * 1.9 + 114);
+            int newWidth = this.Width - 270; 
             int newHeight = Convert.ToInt32(newWidth / 3 * 1.9);
 
             if (newHeight + 120 > this.Size.Height)
@@ -199,8 +197,8 @@ namespace Fract
 
             pictureBox1.Size = new Size(newWidth, newHeight);
 
-            ListC1.Clear();
-            ListC2.Clear();
+            dictionary1.Clear();
+            dictionary2.Clear();
         }
 
         DirectBitmap bitmap = new DirectBitmap(1, 1);
@@ -265,13 +263,14 @@ namespace Fract
         }
          
         private double k = 0.3;  // коэффициент фильтрации, 0.0-1.0, меньше, плавнее
-        private long lastTime;
+        private long lastTime = 0;
         static double OldFps = 0;
         private void FPSGenerator()
         {
             long deltaTime = DateTime.UtcNow.Ticks - lastTime; //(10,000,000 ТИКов в секунду).
+            if (deltaTime == 0) deltaTime = 100; //только до 1000 фпс
+             lastTime = DateTime.UtcNow.Ticks;
             double CurrentFps = 1.0 / deltaTime * 10000000;
-            lastTime = DateTime.UtcNow.Ticks;
             OldFps += (CurrentFps - OldFps) * k;
             FPSTextBox.Text = Convert.ToString(Math.Round(OldFps, 2));
         }

@@ -42,8 +42,7 @@ namespace Fract
                 double newRe = 1.5 * (x - w / 2) / (0.5 * zoom * w) + moveX;
                 double newIm = (y - h / 2) / (0.5 * zoom * h) + moveY;
                 while ((newRe * newRe + newIm * newIm) < 4 && i < maxIterations)
-                {
-
+                { 
                     oldRe = newRe;
                     oldIm = newIm;
 
@@ -52,7 +51,7 @@ namespace Fract
 
                     i++;
                 }
-                hColors[y] = Rainbow(i * 0.85F / 400F); //массив цветов вместо влоутов + 10%
+                hColors[y] = Rainbow(i * 0.85F / 400F); 
             }
 
             lock (block) //вынесение дало + 10%
